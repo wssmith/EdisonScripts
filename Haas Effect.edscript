@@ -1,0 +1,134 @@
+script "Haas Effect" language "pascal";
+
+uses Stereo;
+
+procedure Haas(delayT, makeupScaling : Single; isLeft, normalize : Boolean);
+var n, n1, x, c, x1, x2, delayS : Integer;
+    s : Single;
+    useDelay : Boolean;
+    tempSample : TSample;
+begin
+
+if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then exit;
+
+// Check if the sample is mono and stereoize if neccessary
+if (EditorSample.NumChans = 1) then MonoToStereo;
+
+// Convert milliseconds to samples
+delayS := Round(EditorSample.MSToSamples(delayT));
+
+// Create temporary sample
+tempSample := TSample.Create;
+tempSample.Length := EditorSample.Length + delayS;
+tempSample.NumChans := EditorSample.NumChans;
+
+Editor.GetSelectionS(x1, x2);
+x2 := x2 + delayS;
+
+// If nothing is selected, then select everything
+if (x1 = x2) then
+begin
+    x1 := 0;
+    x2 := (EditorSample.Length - 1) + delayS;
+end;
+
+for n := x1 to x2 do
+begin
+    for c := 0 to (EditorSample.NumChans - 1) do
+    begin
+        s := EditorSample.GetSampleAt(n, c);
+        tempSample.SetSampleAt(n, c, s);
+    end; // c
+end; // n
+
+// Compute the delay on a temporary buffer
+for n := x2 downto x1 do 
+begin
+    if ((x2 - n) mod 10000) = 0 then ProgressMsg('Delaying channel...', x2 - n, x2 - x1); // Progress message
+
+    // Add delay to specified channel
+    for c := 0 to (EditorSample.NumChans - 1) do
+    begin
+        useDelay := ((c = 0) and isLeft) or ((c = 1) and not isLeft);
+                
+        if (useDelay and (n < (x1 + delayS))) or (not useDelay and (n > (x2 - delayS))) then 
+            tempSample.SetSampleAt(n, c, 0)
+        else
+        begin
+            if useDelay then 
+                n1 := n - delayS
+            else
+            begin
+                n1 := n;
+
+                s := tempSample.GetSampleAt(n1, c);
+                if (not useDelay) then s := s * makeupScaling;
+
+                tempSample.SetSampleAt(n, c, s);
+            end;
+        end;
+    end; // c
+end; // n
+
+// Normalize the selected area
+if normalize then tempSample.NormalizeFromTo(x1, x2, 1.0);
+
+// Copy temporary buffer data to the actual EditorSample
+EditorSample.Length := EditorSample.Length + delayS;
+EditorSample.InsertSilence(x2 - delayS, x2);
+EditorSample.Length := EditorSample.Length - delayS;
+
+for n := x1 to x2 do 
+begin
+    if ((n - x1) mod 10000) = 0 then ProgressMsg('Copying from buffer...', n - x1, x2 - x1); // Progress message
+
+    for c := 0 to (EditorSample.NumChans - 1) do
+    begin
+        s := tempSample.GetSampleAt(n, c);              
+        EditorSample.SetSampleAt(n, c, s);
+    end; // c
+end; // n
+
+tempSample.Free;
+
+end; // end function Haas
+
+// --------------------------------------------------------------------------
+
+var Form : TScriptDialog;
+var isLeft : Boolean;
+var delay, makeupScaling : Single;
+
+// Variables and constants
+const makeupLbl = 'Makeup scaling';
+const delayLbl = 'Delay (ms)';
+const channelLbl = 'Channel';
+
+const makeupDefault = 1.1;
+const delayDefault = 8.0;
+const channelDefault = 0; // left
+
+const delayMin = 0;
+const delayMax = 100; // After 100 ms the effect is usually gone, regardless of signal
+const makeupMin = 1;
+const makeupMax = 2;
+
+const normLbl = 'Normalize?';
+const normChoices = 'No,Yes';
+const normDefault = 0; // No
+
+begin
+
+Form := CreateScriptDialog('Haas effect',
+                           'Slight delay of one channel resulting in a shift in the stereo image.' );
+
+Form.AddInputKnob(delayLbl, delayDefault, delayMin, delayMax);
+Form.AddInputCombo(channelLbl, 'Left,Right', channelDefault);
+Form.AddInputKnob(makeupLbl, makeupDefault, makeupMin, makeupMax);
+Form.AddInputCombo(normLbl, normChoices, normDefault);
+
+if Form.Execute then Haas(Form.GetInputValue(delayLbl), Form.GetInputValue(makeupLbl), 
+                          (Form.GetInputValueAsInt(channelLbl) = 0), (Form.GetInputValueAsInt(normLbl) = 1));
+Form.Free;
+
+end.
