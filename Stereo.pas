@@ -1,7 +1,6 @@
 {
 
 Stereo
-11/17/12 Wesley Smith
 
 Description:
     Utility functions for functions related to stereo imaging.
