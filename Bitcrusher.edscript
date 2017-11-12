@@ -160,7 +160,7 @@ const resoDefault = 0;
 begin
 
 Form := CreateScriptDialog('Bitcrusher',
-                           'Bit reduction, and sample-and-hold at the specified rate.' + CRLF + 
+                           'Bit depth and sample rate reduction.' + CRLF + 
                            'Includes a 24 dB/oct lowpass filter.');
 
 Form.AddInputKnob(freqLbl, freqDefault, freqMin, freqMax);
