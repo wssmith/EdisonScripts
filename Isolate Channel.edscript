@@ -1,4 +1,4 @@
-script "Isolate Channel" language "pascal"; // By Kyrandian, 11/12/2012
+script "Isolate Channel" language "pascal";
 
 uses Stereo;
 
