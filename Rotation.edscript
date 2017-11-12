@@ -1,0 +1,143 @@
+script "Rotation" language "pascal"; // By Kyrandian, 11/12/2012
+
+uses Stereo;
+
+procedure Rotation(angle, sep, order : Single; normalize : Boolean);
+var n, c, x1, x2 : Integer;
+var s, left, leftTemp, right, mid, side : Single;
+    angleRad, sinCoef, cosCoef : Double;
+begin
+
+if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then exit;
+
+// Check if the sample is mono and stereoize if neccessary
+if (EditorSample.NumChans = 1) then MonoToStereo;
+
+Editor.GetSelectionS(x1, x2);
+
+// If nothing is selected, then select everything
+if (x1 = x2) then
+begin
+   x1 := 0;
+   x2 := EditorSample.Length - 1;
+end;
+
+// Rotation matrix coefficients
+angleRad := Pi * (angle / 180.); // Degrees to radians
+cosCoef := Cos(angleRad);
+sinCoef := Sin(angleRad);
+
+// Separation then rotation -------------------------------------------------
+if (order = 0) then
+begin
+    // For each sample...
+    for n := x1 to x2 do 
+    begin
+        // Progress message
+        if ((n - x1) mod 10000) = 0 then ProgressMsg('Processing...', n - x1, x2 - x1);
+    
+        // Left-Right channels
+        left := EditorSample.GetSampleAt(n, 0);
+        right := EditorSample.GetSampleAt(n, 1);
+    
+        // Mid-Side Channels
+        mid := (left + right) / 2.0;
+        side := (left - right) / 2.0;
+
+        // Separation
+        left := (1 + sep) * side + (1 - sep) * mid;
+        right := -1 * (1 + sep) * side + (1 - sep) * mid;
+        
+        // Rotation
+        // For each channel...
+        for c := 0 to (EditorSample.NumChans - 1) do
+        begin
+            if (c = 0) then 	// Left
+                s := left * cosCoef - right * sinCoef;
+            if (c = 1) then  	// Right
+                s := left * sinCoef + right * cosCoef;
+            if (c > 1) then
+                ShowMessage('Unknown channel encountered: ' + IntToStr(c));
+                
+            EditorSample.SetSampleAt(n, c, s);
+        end; // c
+    end; // n
+end; // order
+    
+// Rotation then separation -------------------------------------------------
+if (order = 1) then
+begin
+    for n := x1 to x2 do 
+    begin
+        // Progress message
+        if ((n - x1) mod 10000) = 0 then ProgressMsg('Processing...', n - x1, x2 - x1);
+    
+        // Left-Right channels
+        left := EditorSample.GetSampleAt(n, 0);
+        right := EditorSample.GetSampleAt(n, 1);
+        
+        // Rotation
+        leftTemp := left * cosCoef - right * sinCoef;
+        right := left * sinCoef + right * cosCoef;
+        left := leftTemp;
+        
+        // Mid-Side Channels
+        mid := (left + right) / 2.0;
+        side := (left - right) / 2.0;
+    
+        // Separation
+        for c := 0 to (EditorSample.NumChans - 1) do
+        begin
+            if (c = 0) then 	// Left
+                s := (1 + sep) * side + (1 - sep) * mid; // Left
+            if (c = 1) then  	// Right
+                s := -(1 + sep) * side + (1 - sep) * mid; // Invert Right Side
+            if (c > 1) then
+                ShowMessage('Unknown channel encountered: ' + IntToStr(c));
+            
+            EditorSample.SetSampleAt(n, c, s);
+        end; // c
+    end; // n
+end; // order
+
+// Normalize the sample
+if normalize then EditorSample.NormalizeFromTo(x1, x2, 1.0);
+
+end; // end function Separation
+
+// --------------------------------------------------------------------------
+
+// Variables and constants
+var Form:TScriptDialog;
+var sep:Single;
+
+const sepLbl = 'Separation';
+const sepMin = -1;
+const sepMax = 1;
+const sepDefault = 0;
+
+const rotLbl = 'Rotation (deg)';
+const rotMin = -180;
+const rotMax = 180;
+const rotDefault = 0;
+
+const normLbl = 'Normalize?';
+const normChoices = 'No,Yes';
+const normDefault = 0; // No
+
+const orderLbl = 'Order';
+const orderChoices = 'Separate->Rotate,Rotate->Separate';
+const orderDefault = 0; // Rotation -> Separation
+
+begin
+Form := CreateScriptDialog('Stereo Rotation', 'Rotate, widen, or collapse the stereo field.');
+
+Form.AddInputKnob(rotLbl, rotDefault, rotMin, rotMax);
+Form.AddInputKnob(sepLbl, sepDefault, sepMin, sepMax);
+Form.AddInputCombo(normLbl, normChoices, normDefault);
+Form.AddInputCombo(orderLbl, orderChoices, orderDefault);
+
+if Form.Execute then Rotation(Form.GetInputValue(rotLbl), Form.GetInputValue(sepLbl),
+                              Form.GetInputValue(orderLbl), Form.GetInputValue(normLbl)=1);
+Form.Free;
+end.
