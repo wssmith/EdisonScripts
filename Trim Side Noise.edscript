@@ -1,0 +1,66 @@
+script "Trim Sides (advanced)" language "pascal";
+{
+
+Trim Sides (advanced)
+
+Description:
+    Trims sample data below a noise threshold at the beginning and/or end
+    of a sample. Optionally performs declicking and normalization.
+
+}
+
+uses Trimming;
+
+// Adjustable Parameters ----------------------------------------------------
+const sideDefault = 0;          // Side. 0: Left (start), 1: Right (end), 2: Both
+const threshDefault = -33;      // <-- EDIT DEFAULT NOISE THRESHOLD HERE
+const declickDefault = 1;       // Declick? 0: No, 1: Yes
+const declickAmtDefault = 0;    // Length of declicking/fade (milliseconds)
+const tensionDefault = 0;       // Tension of declicking curve
+                                // >0: Concave down, <0: Concave up, =0: Flat
+const normDefault = 0;          // Normalize? 0: No, 1: Yes
+// End adjustable parameters ------------------------------------------------
+
+// Variables ----------------------------------------------------------------
+var Form : TScriptDialog;
+
+// Constants ----------------------------------------------------------------
+const sideLbl = 'Side';
+const sideChoices = 'Start,End,Both';
+
+const threshLbl = 'Threshold (dB)';
+const threshMin = -100;
+const threshMax = 0;
+
+const declickAmtLbl = 'Declick length';
+const declickAmtMin = 0;
+const declickAmtMax = 100000;
+
+const tensionLbl = 'Tension';
+const tensionMin = -100;
+const tensionMax = 100;
+
+const normLbl = 'Normalize?';
+const normChoices = 'No,Yes';
+
+// End constants ------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+begin
+
+Form := CreateScriptDialog('Trim Side Noise (advanced)',
+                           'Removes everything below the noise threshold from the beginning and/or end of the sample.');
+
+Form.AddInputCombo(sideLbl,sideChoices, sideDefault);
+Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
+Form.AddInputKnob(declickAmtLbl, declickAmtDefault, declickAmtMin, declickAmtMax);
+Form.AddInputKnob(tensionLbl, tensionDefault, tensionMin, tensionMax);
+Form.AddInputCombo(normLbl, normChoices, normDefault);
+
+if Form.Execute then TrimSide(Form.GetInputValue(sideLbl), Form.GetInputValue(threshLbl), 
+                              Form.GetInputValue(tensionLbl), (Form.GetInputValueAsInt(declickAmtLbl) > 0), 
+                              (Form.GetInputValueAsInt(normLbl) = 1), Form.GetInputValueAsInt(declickAmtLbl));
+
+Form.Free;
+
+end.
