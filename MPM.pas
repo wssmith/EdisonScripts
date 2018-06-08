@@ -16,7 +16,7 @@ interface
 type IntArray = array of integer;
 type DoubleArray = array of double;
 
-const defaultCutoff : double = 0.97;
+const defaultCutoff : double = 0.97; // Ratio to the highest NSDF peak, above which estimates can be selected
 
 function GetNote(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : integer;
 function PitchToNote(const frequency : double) : integer;
