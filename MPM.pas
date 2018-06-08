@@ -13,41 +13,41 @@ unit MPM;
 interface
 
 // Functions and procedures -------------------------------------------------
-type IntArray = array of Integer;
-type DoubleArray = array of Double;
+type IntArray = array of integer;
+type DoubleArray = array of double;
 
-const defaultCutoff : Double = 0.97;
+const defaultCutoff : double = 0.97;
 
-function GetNote(const buffer : DoubleArray; const sampleRate : Double; const cutoff : Double = defaultCutoff) : Integer;
-function PitchToNote(const frequency : Double) : Integer;
-function GetPitch(const buffer : DoubleArray; const sampleRate : Double; const cutoff : Double = defaultCutoff) : Double;
+function GetNote(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : integer;
+function PitchToNote(const frequency : double) : integer;
+function GetPitch(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : double;
 procedure NormalizedSquareDifference(const buffer: DoubleArray; var nsdf : DoubleArray);
-procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : Integer; var turningPtX, turningPtY : Double);
-procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : Integer);
+procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; var turningPtX, turningPtY : double);
+procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : integer);
 // End functions and procedures ---------------------------------------------
 
 implementation
 
-const smallCutoff : Double = 0.5; //
-const lowerPitchCutoff : Double = 80.0; //
-const tuning : Double = 440; // Tuning of A4 (in Hz)
+const smallCutoff : double = 0.5; //
+const lowerPitchCutoff : double = 80.0; //
+const tuning : double = 440; // Tuning of A4 (in Hz)
 
 // Estimates the pitch of an audio buffer and returns the closest MIDI note
-function GetNote(const buffer : DoubleArray; const sampleRate : Double; const cutoff : Double = defaultCutoff) : Integer;
+function GetNote(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : integer;
 begin
     GetNote := PitchToNote(GetPitch(buffer, sampleRate, cutoff));
 end;
 
 // Converts frequency (in Hz) to the closet MIDI note
-function PitchToNote(const frequency : Double) : Integer;
+function PitchToNote(const frequency : double) : integer;
 begin
     PitchToNote := Round(12 * Ln(frequency / tuning) / Ln(2)) + 57;
 end;
 
 // Estimates the pitch of an audio buffer (in Hz)
-function GetPitch(const buffer : DoubleArray; const sampleRate : Double; const cutoff : Double = defaultCutoff) : Double;
-var i, tau, bufferSize, periodIndex, posCount, estimateCount : Integer;
-var maxAmp, turningPtX, turningPtY, actualCutoff, period, pitchEstimate : Double;
+function GetPitch(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : double;
+var i, tau, bufferSize, periodIndex, posCount, estimateCount : integer;
+var maxAmp, turningPtX, turningPtY, actualCutoff, period, pitchEstimate : double;
 var maxPositions : IntArray;
 var nsdf, periodEstimates, ampEstimates : DoubleArray;
 begin
@@ -112,8 +112,8 @@ begin
 end;
 
 procedure NormalizedSquareDifference(const buffer : DoubleArray; var nsdf : DoubleArray);
-var i, tau, bufferSize : Integer;
-var acf, divisorM : Double;
+var i, tau, bufferSize : integer;
+var acf, divisorM : double;
 begin
     bufferSize := Length(buffer);
 
@@ -132,8 +132,8 @@ begin
     end;
 end;
 
-procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : Integer; var turningPtX, turningPtY : Double);
-var bottom, delta : Double;
+procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; var turningPtX, turningPtY : double);
+var bottom, delta : double;
 begin
     bottom := nsdf[tau + 1] + nsdf[tau - 1] - (2 * nsdf[tau]);
     if (bottom = 0.0) then
@@ -149,8 +149,8 @@ begin
     end;
 end;
 
-procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : Integer);
-var pos, curMaxPos, nsdfSize : Integer;
+procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : integer);
+var pos, curMaxPos, nsdfSize : integer;
 begin
     pos := 0;
     curMaxPos := 0;
