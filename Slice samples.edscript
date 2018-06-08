@@ -184,7 +184,7 @@ const threshDefault = -45;    // Threshold (in dB) below which the audio is cons
 const patienceDefault = 50;   // Maximum consecutive milliseconds of silence allowed in one sample
 const trimDefault = 0;        // Should silent regions be deleted? No: 0, Yes: 1
 const keysDefault = 0;        // Should keys be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
-const lowNoteDefault = 30;    // Lowest note sampled (if assigning notes manually)
+const lowNoteDefault = 48;    // Lowest note sampled (if assigning notes manually)
 const intervalDefault = 1;    // Interval between each note sampled (if assigning notes manually)
 
 // Variables ----------------------------------------------------------------
@@ -206,8 +206,8 @@ const keysLbl = 'Key assignment';
 const keysChoices = 'Off,Manual,Automatic';
 
 const lowNoteLbl = 'Low note';
-const lowNoteMin = 1;
-const lowNoteMax = 100;
+const lowNoteMin = 0;
+const lowNoteMax = 127;
 
 const intervalLbl = 'Interval';
 const intervalMin = 1;
