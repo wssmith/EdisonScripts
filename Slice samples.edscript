@@ -4,7 +4,7 @@ script "Slice samples" language "pascal";
 Slice Samples
 
 Description:
-    Inserts a slice marker at the beginning of non-silent section of audio.
+    Inserts a slice marker at the beginning of each non-silent section of audio.
 
 }
 
@@ -177,6 +177,7 @@ begin
             end;
         end;
     end;
+
 end;
 
 // Adjustable Parameters ----------------------------------------------------
@@ -216,7 +217,7 @@ const intervalMax : integer = 12;
 // --------------------------------------------------------------------------
 begin
 
-Form := CreateScriptDialog('Slice Samples', 'Inserts a slice marker at the beginning of non-silent section of audio.');
+Form := CreateScriptDialog('Slice Samples', 'Inserts a slice marker at the beginning of each non-silent section of audio.');
 
 Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
 Form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
