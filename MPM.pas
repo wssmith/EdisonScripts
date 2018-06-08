@@ -28,8 +28,8 @@ procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out
 
 implementation
 
-const smallCutoff : double = 0.5; //
-const lowerPitchCutoff : double = 80.0; //
+const smallCutoff : double = 0.5; // Don't consider NSDF peaks of lower magnitudes
+const lowerPitchCutoff : double = 80.0; // Only consider pitches above this frequency (Hz)
 const tuning : double = 440; // Tuning of A4 (in Hz)
 
 // Estimates the pitch of an audio buffer and returns the closest MIDI note
