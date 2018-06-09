@@ -22,7 +22,7 @@ function GetNote(const buffer : DoubleArray; const sampleRate : double; const cu
 function PitchToNote(const frequency : double) : integer;
 function GetPitch(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : double;
 procedure NormalizedSquareDifference(const buffer: DoubleArray; var nsdf : DoubleArray);
-procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; var turningPtX, turningPtY : double);
+procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; out turningPtX, turningPtY : double);
 procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : integer);
 // End functions and procedures ---------------------------------------------
 
