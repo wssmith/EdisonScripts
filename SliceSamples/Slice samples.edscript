@@ -11,10 +11,10 @@ Description:
 uses MPM;
 
 // Convert a normalized sample value to its value on the decibel scale
-function ValToDB(const val, ref : double) : double;
+function ValueToDecibels(const val, ref : double) : double;
 begin
-    if (ref = 0) then ValToDB := 0
-    else ValToDB := 20 * Ln(Abs(val / ref)) / Ln(10);
+    if (ref = 0) then ValueToDecibels := 0
+    else ValueToDecibels := 20 * Ln(Abs(val / ref)) / Ln(10);
 end;
 
 type KeyAssignType = (None = 0, Manual = 1, Automatic = 2);
@@ -80,7 +80,7 @@ begin
         // Determine whether the sample is silent on every channel
         for c := 0 to (EditorSample.NumChans - 1) do
         begin
-            sDb := ValToDB(EditorSample.GetSampleAt(n, c), 1.);
+            sDb := ValueToDecibels(EditorSample.GetSampleAt(n, c), 1.);
             if (sDb >= threshold) then
             begin
                 isStepZero := false;

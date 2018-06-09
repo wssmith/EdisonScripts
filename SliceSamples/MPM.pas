@@ -1,6 +1,7 @@
 {
 
 Pitch Detection
+
 Description:
     MPM algorithm for detecting the pitch of a piece of audio.
     Reference: http://www.cs.otago.ac.nz/tartini/papers/A_Smarter_Way_to_Find_Pitch.pdf
