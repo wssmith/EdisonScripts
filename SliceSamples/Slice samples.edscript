@@ -19,7 +19,7 @@ end;
 
 type KeyAssignType = (None = 0, Manual = 1, Automatic = 2);
 
-const silenceMarker : string = 'SILENT';
+const silenceAnnotation : string = 'SILENT';
 const defaultMaxBufferMs : double = 100;
 
 // Main function for slicing the audio into regions
@@ -98,7 +98,7 @@ begin
                 isSoundFound := false;
                 r := EditorSample.AddRegion('', n - 1);
                 Region := EditorSample.GetRegion(r);
-                Region.Info := silenceMarker;
+                Region.Info := silenceAnnotation;
             end;
         end
         else
@@ -117,7 +117,7 @@ begin
                     
                     // If the audio clip begins with silence, an initial silent region must be added
                     if (sampleCount = 1) and (Region.SampleStart > 0) then
-                        EditorSample.GetRegion(EditorSample.AddRegion('', 0)).Info := silenceMarker;
+                        EditorSample.GetRegion(EditorSample.AddRegion('', 0)).Info := silenceAnnotation;
                 end
                 else
                 begin
@@ -145,7 +145,7 @@ begin
                 r2 := EditorSample.GetRegion(r + 1).SampleStart - 1;
             
             // Assign MIDI note to region via automatic pitch detection
-            if (setKeys = Ord(Automatic)) and (Region.Info <> silenceMarker) then
+            if (setKeys = Ord(Automatic)) and (Region.Info <> silenceAnnotation) then
             begin
                 ProgressMsg('Detecting region pitches...', (EditorSample.RegionCount - 1 - r), (EditorSample.RegionCount - 1));
 
@@ -169,7 +169,7 @@ begin
             end;
             
             // Delete silent regions
-            if trimSilence and (Region.Info = silenceMarker) and (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
+            if trimSilence and (Region.Info = silenceAnnotation) and (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
             begin
                 EditorSample.DeleteRegion(r);
                 EditorSample.DeleteFromTo(r1, r2);
