@@ -8,89 +8,87 @@ var n, n1, x, c, x1, x2, delayS : Integer;
     useDelay : Boolean;
     tempSample : TSample;
 begin
+    if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then exit;
 
-if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then exit;
+    // Check if the sample is mono and stereoize if neccessary
+    if (EditorSample.NumChans = 1) then MonoToStereo;
 
-// Check if the sample is mono and stereoize if neccessary
-if (EditorSample.NumChans = 1) then MonoToStereo;
+    // Convert milliseconds to samples
+    delayS := Round(EditorSample.MSToSamples(delayT));
 
-// Convert milliseconds to samples
-delayS := Round(EditorSample.MSToSamples(delayT));
+    // Create temporary sample
+    tempSample := TSample.Create;
+    tempSample.Length := EditorSample.Length + delayS;
+    tempSample.NumChans := EditorSample.NumChans;
 
-// Create temporary sample
-tempSample := TSample.Create;
-tempSample.Length := EditorSample.Length + delayS;
-tempSample.NumChans := EditorSample.NumChans;
+    Editor.GetSelectionS(x1, x2);
+    x2 := x2 + delayS;
 
-Editor.GetSelectionS(x1, x2);
-x2 := x2 + delayS;
-
-// If nothing is selected, then select everything
-if (x1 = x2) then
-begin
-    x1 := 0;
-    x2 := (EditorSample.Length - 1) + delayS;
-end;
-
-for n := x1 to x2 do
-begin
-    for c := 0 to (EditorSample.NumChans - 1) do
+    // If nothing is selected, then select everything
+    if (x1 = x2) then
     begin
-        s := EditorSample.GetSampleAt(n, c);
-        tempSample.SetSampleAt(n, c, s);
-    end; // c
-end; // n
+        x1 := 0;
+        x2 := (EditorSample.Length - 1) + delayS;
+    end;
 
-// Compute the delay on a temporary buffer
-for n := x2 downto x1 do 
-begin
-    if ((x2 - n) mod 10000) = 0 then ProgressMsg('Delaying channel...', x2 - n, x2 - x1); // Progress message
-
-    // Add delay to specified channel
-    for c := 0 to (EditorSample.NumChans - 1) do
+    for n := x1 to x2 do
     begin
-        useDelay := ((c = 0) and isLeft) or ((c = 1) and not isLeft);
-                
-        if (useDelay and (n < (x1 + delayS))) or (not useDelay and (n > (x2 - delayS))) then 
-            tempSample.SetSampleAt(n, c, 0)
-        else
+        for c := 0 to (EditorSample.NumChans - 1) do
         begin
-            if useDelay then 
-                n1 := n - delayS
+            s := EditorSample.GetSampleAt(n, c);
+            tempSample.SetSampleAt(n, c, s);
+        end; // c
+    end; // n
+
+    // Compute the delay on a temporary buffer
+    for n := x2 downto x1 do 
+    begin
+        if ((x2 - n) mod 10000) = 0 then ProgressMsg('Delaying channel...', x2 - n, x2 - x1); // Progress message
+
+        // Add delay to specified channel
+        for c := 0 to (EditorSample.NumChans - 1) do
+        begin
+            useDelay := ((c = 0) and isLeft) or ((c = 1) and not isLeft);
+
+            if (useDelay and (n < (x1 + delayS))) or (not useDelay and (n > (x2 - delayS))) then 
+                tempSample.SetSampleAt(n, c, 0)
             else
             begin
-                n1 := n;
+                if useDelay then 
+                    n1 := n - delayS
+                else
+                begin
+                    n1 := n;
 
-                s := tempSample.GetSampleAt(n1, c);
-                if (not useDelay) then s := s * makeupScaling;
+                    s := tempSample.GetSampleAt(n1, c);
+                    if (not useDelay) then s := s * makeupScaling;
 
-                tempSample.SetSampleAt(n, c, s);
+                    tempSample.SetSampleAt(n, c, s);
+                end;
             end;
-        end;
-    end; // c
-end; // n
+        end; // c
+    end; // n
 
-// Normalize the selected area
-if normalize then tempSample.NormalizeFromTo(x1, x2, 1.0);
+    // Normalize the selected area
+    if normalize then tempSample.NormalizeFromTo(x1, x2, 1.0);
 
-// Copy temporary buffer data to the actual EditorSample
-EditorSample.Length := EditorSample.Length + delayS;
-EditorSample.InsertSilence(x2 - delayS, x2);
-EditorSample.Length := EditorSample.Length - delayS;
+    // Copy temporary buffer data to the actual EditorSample
+    EditorSample.Length := EditorSample.Length + delayS;
+    EditorSample.InsertSilence(x2 - delayS, x2);
+    EditorSample.Length := EditorSample.Length - delayS;
 
-for n := x1 to x2 do 
-begin
-    if ((n - x1) mod 10000) = 0 then ProgressMsg('Copying from buffer...', n - x1, x2 - x1); // Progress message
-
-    for c := 0 to (EditorSample.NumChans - 1) do
+    for n := x1 to x2 do 
     begin
-        s := tempSample.GetSampleAt(n, c);              
-        EditorSample.SetSampleAt(n, c, s);
-    end; // c
-end; // n
+        if ((n - x1) mod 10000) = 0 then ProgressMsg('Copying from buffer...', n - x1, x2 - x1); // Progress message
 
-tempSample.Free;
+        for c := 0 to (EditorSample.NumChans - 1) do
+        begin
+            s := tempSample.GetSampleAt(n, c);              
+            EditorSample.SetSampleAt(n, c, s);
+        end; // c
+    end; // n
 
+    tempSample.Free;
 end; // end function Haas
 
 // --------------------------------------------------------------------------
