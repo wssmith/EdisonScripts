@@ -203,7 +203,7 @@ const patienceMax : double = 1000;
 const trimLbl : string = 'Trim silence?';
 const trimChoices : string = 'No,Yes';
 
-const keysLbl : string = 'Key assignment';
+const keysLbl : string = 'Note assignment';
 const keysChoices : string = 'Off,Manual,Automatic';
 
 const lowNoteLbl : string = 'Low note';
@@ -217,7 +217,7 @@ const intervalMax : integer = 12;
 // --------------------------------------------------------------------------
 begin
 
-Form := CreateScriptDialog('Slice Samples', 'Inserts a slice marker at the beginning of each non-silent section of audio.');
+Form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the beginning of each non-silent section of audio.');
 
 Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
 Form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
