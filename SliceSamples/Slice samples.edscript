@@ -31,7 +31,6 @@ var sDb, patienceS, regionPitch : double;
 var region, prevRegion : TRegion;
 var buffer : array of double;
 begin
-
     if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then
         exit;
 
@@ -177,7 +176,6 @@ begin
             end;
         end;
     end;
-
 end;
 
 // Adjustable Parameters ----------------------------------------------------
