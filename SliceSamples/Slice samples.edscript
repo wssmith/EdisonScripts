@@ -25,11 +25,11 @@ const defaultMaxBufferMs : double = 100;
 // Main function for slicing the audio into regions
 procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const setKeys, lowNote, interval : integer; const maxBufferMs : double = defaultMaxBufferMs);
 var isSoundFound, isStepZero : boolean;
-var n, c, x1, x2, r, r1, r2 : integer;
-var silentSteps, sampleCount, maxBufferS, bufferLength : integer;
-var sDb, patienceS, regionPitch : double;
-var region, prevRegion : TRegion;
-var buffer : array of double;
+    n, c, x1, x2, r, r1, r2 : integer;
+    silentSteps, sampleCount, maxBufferS, bufferLength : integer;
+    sDb, patienceS, regionPitch : double;
+    Region : TRegion;
+    buffer : array of double;
 begin
     if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then
         exit;
@@ -52,21 +52,21 @@ begin
     // Delete all regions within the current selection
     for r := (EditorSample.RegionCount - 1) downto 0 do
     begin
-        region := EditorSample.GetRegion(r);
+        Region := EditorSample.GetRegion(r);
         
-        if (region.SampleStart >= x1) and (region.SampleStart <= x2) then
+        if (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
         begin
-            if (region.SampleEnd <= x2) or (region.SampleEnd = MaxInt) then
+            if (Region.SampleEnd <= x2) or (Region.SampleEnd = MaxInt) then
                 EditorSample.DeleteRegion(r)
-            else if (region.SampleEnd > x2) then
-                region.SampleStart := x2 + 1;
+            else if (Region.SampleEnd > x2) then
+                Region.SampleStart := x2 + 1;
         end
-        else if (region.SampleStart < x1) and (region.SampleEnd <> MaxInt) then
+        else if (Region.SampleStart < x1) and (Region.SampleEnd <> MaxInt) then
         begin
-            if (region.SampleEnd > x2)  then
+            if (Region.SampleEnd > x2)  then
                 EditorSample.AddRegion('', x2 + 1);
-            if (region.SampleEnd >= x1) then
-                region.SampleEnd := MaxInt;
+            if (Region.SampleEnd >= x1) then
+                Region.SampleEnd := MaxInt;
         end;
     end;
 
@@ -97,8 +97,8 @@ begin
             begin
                 isSoundFound := false;
                 r := EditorSample.AddRegion('', n - 1);
-                region := EditorSample.GetRegion(r);
-                region.Info := silenceMarker;
+                Region := EditorSample.GetRegion(r);
+                Region.Info := silenceMarker;
             end;
         end
         else
@@ -113,21 +113,21 @@ begin
                 if (n > x1) then
                 begin
                     r := EditorSample.AddRegion('', n - 1);
-                    region := EditorSample.GetRegion(r);
+                    Region := EditorSample.GetRegion(r);
                     
                     // If the audio clip begins with silence, an initial silent region must be added
-                    if (sampleCount = 1) and (region.SampleStart > 0) then
+                    if (sampleCount = 1) and (Region.SampleStart > 0) then
                         EditorSample.GetRegion(EditorSample.AddRegion('', 0)).Info := silenceMarker;
                 end
                 else
                 begin
                     r := EditorSample.AddRegion('', x1);
-                    region := EditorSample.GetRegion(r);
+                    Region := EditorSample.GetRegion(r);
                 end;
                 
                 // Assign MIDI note to region
                 if (setKeys = Ord(Manual)) then
-                    region.KeyNum := lowNote + interval * (sampleCount - 1)
+                    Region.KeyNum := lowNote + interval * (sampleCount - 1)
             end;
         end;
     end;
@@ -137,15 +137,15 @@ begin
         // For each region...
         for r := (EditorSample.RegionCount - 1) downto 0 do
         begin
-            region := EditorSample.GetRegion(r);
-            r1 := region.SampleStart;
+            Region := EditorSample.GetRegion(r);
+            r1 := Region.SampleStart;
             if (r = (EditorSample.RegionCount - 1)) then
                 r2 := (EditorSample.Length - 1)
             else
                 r2 := EditorSample.GetRegion(r + 1).SampleStart - 1;
             
             // Assign MIDI note to region via automatic pitch detection
-            if (setKeys = Ord(Automatic)) and (region.Info <> silenceMarker) then
+            if (setKeys = Ord(Automatic)) and (Region.Info <> silenceMarker) then
             begin
                 ProgressMsg('Detecting region pitches...', (EditorSample.RegionCount - 1 - r), (EditorSample.RegionCount - 1));
 
@@ -165,11 +165,11 @@ begin
                     regionPitch := regionPitch + GetPitch(buffer, EditorSample.Samplerate) / EditorSample.NumChans;
                 end;
 
-                region.KeyNum := PitchToNote(regionPitch);
+                Region.KeyNum := PitchToNote(regionPitch);
             end;
             
             // Delete silent regions
-            if trimSilence and (region.Info = silenceMarker) and (region.SampleStart >= x1) and (region.SampleStart <= x2) then
+            if trimSilence and (Region.Info = silenceMarker) and (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
             begin
                 EditorSample.DeleteRegion(r);
                 EditorSample.DeleteFromTo(r1, r2);

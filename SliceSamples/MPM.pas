@@ -1,11 +1,8 @@
 {
-
 Pitch Detection
-
 Description:
     MPM algorithm for detecting the pitch of a piece of audio.
     Reference: http://www.cs.otago.ac.nz/tartini/papers/A_Smarter_Way_to_Find_Pitch.pdf
-
 }
 
 unit MPM;
@@ -47,9 +44,9 @@ end;
 // Estimates the pitch of an audio buffer (in Hz)
 function GetPitch(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : double;
 var i, tau, bufferSize, periodIndex, posCount, estimateCount : integer;
-var maxAmp, turningPtX, turningPtY, actualCutoff, period, pitchEstimate : double;
-var maxPositions : IntArray;
-var nsdf, periodEstimates, ampEstimates : DoubleArray;
+    maxAmp, turningPtX, turningPtY, actualCutoff, period, pitchEstimate : double;
+    maxPositions : IntArray;
+    nsdf, periodEstimates, ampEstimates : DoubleArray;
 begin
     bufferSize := Length(buffer);
     SetLength(nsdf, bufferSize);
@@ -113,7 +110,7 @@ end;
 
 procedure NormalizedSquareDifference(const buffer : DoubleArray; var nsdf : DoubleArray);
 var i, tau, bufferSize : integer;
-var acf, divisorM : double;
+    acf, divisorM : double;
 begin
     bufferSize := Length(buffer);
 
