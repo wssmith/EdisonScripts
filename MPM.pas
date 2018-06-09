@@ -132,7 +132,7 @@ begin
     end;
 end;
 
-procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; var turningPtX, turningPtY : double);
+procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; out turningPtX, turningPtY : double);
 var bottom, delta : double;
 begin
     bottom := nsdf[tau + 1] + nsdf[tau - 1] - (2 * nsdf[tau]);
