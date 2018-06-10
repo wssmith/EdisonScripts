@@ -224,7 +224,7 @@ Form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the begin
                                             #$9 + #$2022 + ' Threshold - Amplitudes below this cutoff are considered silent' + CRLF +
                                             #$9 + #$2022 + ' Patience - Length of continuous silence to allow before ending a region' + CRLF +
                                             #$9 + #$2022 + ' Trim silence? - Whether to delete silent regions of audio' + CRLF +
-                                            #$9 + #$2022 + ' Note assignment - Defines how regions are assigned notes values' + CRLF +
+                                            #$9 + #$2022 + ' Note assignment - Defines how regions are assigned note values' + CRLF +
                                             #$9 + #$2022 + ' Lowest note - Lowest note sampled (manual assignment only)' + CRLF +
                                             #$9 + #$2022 + ' Interval - Gap between sampled notes (manual assignment only)');
 
