@@ -222,7 +222,7 @@ Form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the begin
                                             #$9 + #$2022 + ' Trim silence?: Whether to delete silent regions of audio' + CRLF +
                                             #$9 + #$2022 + ' Note assignment: Defines how regions are assigned notes values' + CRLF +
                                             #$9 + #$2022 + ' Low note: Lowest note sampled (manual assignment only)' + CRLF +
-                                            #$9 + #$2022 + ' Interval: Interval between sampled notes (manual assignment only)');
+                                            #$9 + #$2022 + ' Interval: Gap between sampled notes (manual assignment only)');
 
 Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
 Form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
