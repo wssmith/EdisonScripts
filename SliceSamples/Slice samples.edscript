@@ -20,7 +20,7 @@ end;
 type NoteAssignType = (None = 0, Manual = 1, Automatic = 2);
 
 const silenceAnnotation : string = 'SILENT';
-const defaultMaxBufferMs : double = 100;
+const defaultMaxBufferMs : double = 100; // Length of audio used for automatic pitch detection
 
 // Main function for slicing the audio into regions
 procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const assignNotes, lowNote, interval : integer; const maxBufferMs : double = defaultMaxBufferMs);
@@ -43,8 +43,12 @@ begin
         x2 := EditorSample.Length - 1;
     end;
 
+    if (maxBufferMs <= 0) then
+        maxBufferS := MaxInt
+    else
+        maxBufferS := Round(EditorSample.MsToSamples(maxBufferMs));
+    
     patienceS := EditorSample.MsToSamples(patience);
-    maxBufferS := Round(EditorSample.MsToSamples(maxBufferMs));
     isSoundFound := false;
     silentSteps := 0;
     sampleCount := 0;
@@ -179,7 +183,7 @@ begin
 end;
 
 // Adjustable Parameters ----------------------------------------------------
-const threshDefault : double = -45;     // Threshold (in dB) below which the audio is considered silent
+const threshDefault : double = -60;     // Threshold (in dB) below which the audio is considered silent
 const patienceDefault : double = 50;    // Maximum consecutive milliseconds of silence allowed in one sample
 const trimDefault : integer = 0;        // Should silent regions be deleted? No: 0, Yes: 1
 const noteAssignDefault : integer = 0;  // Should notes be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
