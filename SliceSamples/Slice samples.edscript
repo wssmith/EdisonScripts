@@ -17,13 +17,13 @@ begin
     else ValueToDecibels := 20 * Ln(Abs(val / ref)) / Ln(10);
 end;
 
-type KeyAssignType = (None = 0, Manual = 1, Automatic = 2);
+type NoteAssignType = (None = 0, Manual = 1, Automatic = 2);
 
 const silenceAnnotation : string = 'SILENT';
 const defaultMaxBufferMs : double = 100;
 
 // Main function for slicing the audio into regions
-procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const setKeys, lowNote, interval : integer; const maxBufferMs : double = defaultMaxBufferMs);
+procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const assignNotes, lowNote, interval : integer; const maxBufferMs : double = defaultMaxBufferMs);
 var isSoundFound, isStepZero : boolean;
     n, c, x1, x2, r, r1, r2 : integer;
     silentSteps, sampleCount, maxBufferS, bufferLength : integer;
@@ -126,13 +126,13 @@ begin
                 end;
                 
                 // Assign MIDI note to region
-                if (setKeys = Ord(Manual)) then
+                if (assignNotes = Ord(Manual)) then
                     Region.KeyNum := lowNote + interval * (sampleCount - 1)
             end;
         end;
     end;
     
-    if trimSilence or (setKeys = Ord(Automatic)) then
+    if trimSilence or (assignNotes = Ord(Automatic)) then
     begin
         // For each region...
         for r := (EditorSample.RegionCount - 1) downto 0 do
@@ -145,7 +145,7 @@ begin
                 r2 := EditorSample.GetRegion(r + 1).SampleStart - 1;
             
             // Assign MIDI note to region via automatic pitch detection
-            if (setKeys = Ord(Automatic)) and (Region.Info <> silenceAnnotation) then
+            if (assignNotes = Ord(Automatic)) and (Region.Info <> silenceAnnotation) then
             begin
                 ProgressMsg('Detecting region pitches...', (EditorSample.RegionCount - 1 - r), (EditorSample.RegionCount - 1));
 
@@ -182,7 +182,7 @@ end;
 const threshDefault : double = -45;     // Threshold (in dB) below which the audio is considered silent
 const patienceDefault : double = 50;    // Maximum consecutive milliseconds of silence allowed in one sample
 const trimDefault : integer = 0;        // Should silent regions be deleted? No: 0, Yes: 1
-const keysDefault : integer = 0;        // Should keys be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
+const noteAssignDefault : integer = 0;  // Should notes be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
 const lowNoteDefault : integer = 48;    // Lowest note sampled (if assigning notes manually)
 const intervalDefault : integer = 1;    // Interval between each note sampled (if assigning notes manually)
 
@@ -201,8 +201,8 @@ const patienceMax : double = 1000;
 const trimLbl : string = 'Trim silence?';
 const trimChoices : string = 'No,Yes';
 
-const keysLbl : string = 'Note assignment';
-const keysChoices : string = 'Off,Manual,Automatic';
+const noteAssignLbl : string = 'Note assignment';
+const noteAssignChoices : string = 'Off,Manual,Automatic';
 
 const lowNoteLbl : string = 'Low note';
 const lowNoteMin : integer = 0;
@@ -215,18 +215,25 @@ const intervalMax : integer = 12;
 // --------------------------------------------------------------------------
 begin
 
-Form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the beginning of each non-silent section of audio.');
+Form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the beginning of each non-silent section of audio.' + CRLF + CRLF +
+                                            'Parameters:' + CRLF +
+                                            #$9 + #$2022 + ' Threshold: Amplitudes below this cutoff are considered silence' + CRLF +
+                                            #$9 + #$2022 + ' Patience: Length of continuous silence to allow before ending a region' + CRLF +
+                                            #$9 + #$2022 + ' Trim silence?: Whether to delete silent regions of audio' + CRLF +
+                                            #$9 + #$2022 + ' Note assignment: Defines how regions are assigned notes values' + CRLF +
+                                            #$9 + #$2022 + ' Low note: The lowest note sampled (manual assignment only)' + CRLF +
+                                            #$9 + #$2022 + ' Interval: The gap between sampled notes (manual assignment only)');
 
 Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
 Form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
 Form.AddInputCombo(trimLbl, trimChoices, trimDefault);
-Form.AddInputCombo(keysLbl, keysChoices, keysDefault);
+Form.AddInputCombo(noteAssignLbl, noteAssignChoices, noteAssignDefault);
 Form.AddInputKnob(lowNoteLbl, lowNoteDefault, lowNoteMin, lowNoteMax);
 Form.AddInputKnob(intervalLbl, intervalDefault, intervalMin, intervalMax);
 
 if Form.Execute then
     SliceSamples(Form.GetInputValue(threshLbl), Form.GetInputValue(patienceLbl), (Form.GetInputValueAsInt(trimLbl) = 1),
-    Form.GetInputValueAsInt(keysLbl), Form.GetInputValueAsInt(lowNoteLbl), Form.GetInputValueAsInt(intervalLbl));
+    Form.GetInputValueAsInt(noteAssignLbl), Form.GetInputValueAsInt(lowNoteLbl), Form.GetInputValueAsInt(intervalLbl));
 
 Form.Free;
 
