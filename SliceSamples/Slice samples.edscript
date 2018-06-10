@@ -24,9 +24,9 @@ const defaultMaxBufferMs : double = 100; // Length of audio used for automatic p
 
 // Main function for slicing the audio into regions
 procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const assignNotes, lowestNote, interval : integer; const maxBufferMs : double = defaultMaxBufferMs);
-var isSoundFound, isStepZero : boolean;
+var isNoteFound, isSampleSilent : boolean;
     n, c, x1, x2, r, r1, r2 : integer;
-    silentSteps, noteCount, maxBufferS, bufferLength : integer;
+    silenceCount, noteCount, maxBufferS, bufferLength : integer;
     sDb, patienceS, regionPitch, clarity, maxClarity, maxClarityPitch : double;
     Region : TRegion;
     buffer : array of double;
@@ -48,8 +48,8 @@ begin
         maxBufferS := Round(EditorSample.MsToSamples(maxBufferMs));
     
     patienceS := EditorSample.MsToSamples(patience);
-    isSoundFound := false;
-    silentSteps := 0;
+    isNoteFound := false;
+    silenceCount := 0;
     noteCount := 0;
 
     // Delete all regions within the current selection
@@ -78,7 +78,7 @@ begin
     begin
         if (((n - x1) mod 10000) = 0) then ProgressMsg('Detecting regions...', n - x1, x2 - x1);
 
-        isStepZero := true;
+        isSampleSilent := true;
 
         // Determine whether the sample is silent on every channel
         for c := 0 to (EditorSample.NumChans - 1) do
@@ -86,19 +86,19 @@ begin
             sDb := ValueToDecibels(EditorSample.GetSampleAt(n, c), 1.);
             if (sDb >= threshold) then
             begin
-                isStepZero := false;
+                isSampleSilent := false;
                 break;
             end;
         end;
         
         // If the sample is silent and patience is exceeded, end the current region
-        if isStepZero then
+        if isSampleSilent then
         begin
-            Inc(silentSteps, 1);
+            Inc(silenceCount, 1);
 
-            if isSoundFound and (silentSteps > patienceS) then
+            if isNoteFound and (silenceCount > patienceS) then
             begin
-                isSoundFound := false;
+                isNoteFound := false;
                 r := EditorSample.AddRegion('', n - 1);
                 Region := EditorSample.GetRegion(r);
                 Region.Info := silenceAnnotation;
@@ -106,11 +106,11 @@ begin
         end
         else
         begin
-            silentSteps := 0;
+            silenceCount := 0;
             
-            if not isSoundFound then
+            if not isNoteFound then
             begin
-                isSoundFound := true;
+                isNoteFound := true;
                 Inc(noteCount, 1);
 
                 if (n > x1) then
