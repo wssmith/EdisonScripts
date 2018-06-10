@@ -18,9 +18,9 @@ type DoubleArray = array of double;
 
 const defaultCutoff : double = 0.97; // Ratio to the highest NSDF peak, above which estimates can be selected
 
-function GetNote(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : integer;
+function GetNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
 function PitchToNote(const frequency : double) : integer;
-function GetPitch(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : double;
+function GetPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
 procedure NormalizedSquareDifference(const buffer: DoubleArray; var nsdf : DoubleArray);
 procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; out turningPtX, turningPtY : double);
 procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : integer);
@@ -33,19 +33,19 @@ const lowerPitchCutoff : double = 80.0; // Only consider pitches above this freq
 const tuning : double = 440; // Tuning of A4 (in Hz)
 
 // Estimates the pitch of an audio buffer and returns the closest MIDI note
-function GetNote(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : integer;
+function GetNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
 begin
-    GetNote := PitchToNote(GetPitch(buffer, sampleRate, cutoff));
+    GetNote := PitchToNote(GetPitch(buffer, sampleRate, clarity, cutoff));
 end;
 
-// Converts frequency (in Hz) to the closet MIDI note
+// Converts frequency (in Hz) to the closest MIDI note
 function PitchToNote(const frequency : double) : integer;
 begin
     PitchToNote := Round(12 * Ln(frequency / tuning) / Ln(2)) + 57;
 end;
 
 // Estimates the pitch of an audio buffer (in Hz)
-function GetPitch(const buffer : DoubleArray; const sampleRate : double; const cutoff : double = defaultCutoff) : double;
+function GetPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
 var i, tau, bufferSize, periodIndex, posCount, estimateCount : integer;
     maxAmp, turningPtX, turningPtY, actualCutoff, period, pitchEstimate : double;
     maxPositions : IntArray;
@@ -87,7 +87,10 @@ begin
     end;
     
     if (estimateCount = 0) then
-        GetPitch := -1
+    begin
+        clarity := 0;
+        GetPitch := -1;
+    end
     else
     begin
         actualCutoff := cutoff * maxAmp;
@@ -103,6 +106,7 @@ begin
         end;
 
         period := periodEstimates[periodIndex];
+        clarity := ampEstimates[periodIndex];
         pitchEstimate := (sampleRate / period);
         if (pitchEstimate > lowerPitchCutoff) then
             GetPitch := pitchEstimate
