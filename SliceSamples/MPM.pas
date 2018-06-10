@@ -86,12 +86,10 @@ begin
         end;
     end;
     
-    if (estimateCount = 0) then
-    begin
-        clarity := 0;
-        GetPitch := -1;
-    end
-    else
+    clarity := 0;
+    GetPitch := -1;
+
+    if (estimateCount > 0) then
     begin
         actualCutoff := cutoff * maxAmp;
 
@@ -106,12 +104,13 @@ begin
         end;
 
         period := periodEstimates[periodIndex];
-        clarity := ampEstimates[periodIndex];
-        pitchEstimate := (sampleRate / period);
+        pitchEstimate := sampleRate / period;
+
         if (pitchEstimate > lowerPitchCutoff) then
-            GetPitch := pitchEstimate
-        else
-            GetPitch := -1;
+        begin
+            clarity := ampEstimates[periodIndex];
+            GetPitch := pitchEstimate;
+        end
     end;
 end;
 
