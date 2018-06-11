@@ -78,9 +78,8 @@ begin
     begin
         if (((n - x1) mod 10000) = 0) then ProgressMsg('Detecting regions...', n - x1, x2 - x1);
 
-        isSampleSilent := true;
-
         // Determine whether the sample is silent on every channel
+        isSampleSilent := true;
         for c := 0 to (EditorSample.NumChans - 1) do
         begin
             sDb := ValueToDecibels(EditorSample.GetSampleAt(n, c), 1.);
