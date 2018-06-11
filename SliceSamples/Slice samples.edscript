@@ -145,10 +145,10 @@ begin
                 r2 := (EditorSample.Length - 1)
             else
                 r2 := EditorSample.GetRegion(r + 1).SampleStart - 1;
-            
-            // Assign MIDI note to region via automatic pitch detection
+
             if (assignNotes = Ord(Automatic)) and (Region.Info <> silenceAnnotation) then
             begin
+                // Assign MIDI note to region via automatic pitch detection
                 ProgressMsg('Detecting region pitches...', (EditorSample.RegionCount - 1 - r), (EditorSample.RegionCount - 1));
 
                 // Detect the pitch and clarity of each channel and use the pitch of the highest clarity channel
@@ -176,11 +176,10 @@ begin
 
                 if (maxClarity > 0) then
                     Region.KeyNum := PitchToNote(maxClarityPitch);
-            end;
-            
-            // Delete silent regions
-            if trimSilence and (Region.Info = silenceAnnotation) and (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
+            end
+            else if trimSilence and (Region.Info = silenceAnnotation) and (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
             begin
+                // Delete silent regions
                 EditorSample.DeleteRegion(r);
                 EditorSample.DeleteFromTo(r1, r2);
             end;
