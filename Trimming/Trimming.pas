@@ -14,44 +14,45 @@ unit Trimming;
 interface
 
 // Functions and procedures -------------------------------------------------
-function Pow(x, y : Double) : Double;
-function ValToDB(val, ref : Double) : Double;
-procedure TrimSide(side, threshold    : Single;
-                   tension            : Double;
-                   declick, normalize : Boolean;
-                   declickAmt         : Integer);
-// end functions and procedures ---------------------------------------------
+function Pow(x, y : double) : double;
+function ValToDB(val, ref : double) : double;
+procedure TrimSide(side, threshold    : double;
+                   tension            : double;
+                   declick, normalize : boolean;
+                   declickAmt         : integer);
 
 implementation
 
 // Calculate x^y (needed for tension)
-function Pow(x, y: Double): Double;
+function Pow(x, y: double): double;
 begin
    Pow := Exp(y * Ln(x));
 end;
 
-// --------------------------------------------------------------------------
-
 // Convert a normalized sample value to its value on the decibel scale
-function ValToDB(val, ref : Double) : Double;
+function ValToDB(val, ref : double) : double;
 begin
     if (ref = 0) then ValToDB := 0
     else              ValToDB := 20 * Ln(Abs(val / ref)) / Ln(10);
 end;
 
-// --------------------------------------------------------------------------
-
 // Main function for trimming the sides of the sample
-procedure TrimSide(side, threshold         : Single;
-                   tension                 : Double;
-                   declick, normalize      : Boolean;
-                   declickAmt              : Integer);
-var n, m, c, x1, x2, y1, y2, idx, idx2     : Integer;
-    s, a, declickScale                     : Single;
-    ll, lr, rl, rr, llDb, lrDb, rlDb, rrDb : Double;
-    searchLL, searchLR, searchRL, searchRR : Boolean;
+procedure TrimSide(side, threshold         : double;
+                   tension                 : double;
+                   declick, normalize      : boolean;
+                   declickAmt              : integer);
+var n, m, c, x1, x2, y1, y2, idx, idx2     : integer;
+    s, a, declickScale                     : double;
+    ll, lr, rl, rr, llDb, lrDb, rlDb, rrDb : double;
+    searchLL, searchLR, searchRL, searchRR : boolean;
 begin
     if (EditorSample.Length <= 0) then exit;
+
+    if (EditorSample.NumChans <> 2) then
+    begin
+        ShowMessage('This script can only be used on a stereo audio track.');
+        exit;
+    end;
 
     // Initialize loop check booleans
     searchLL := true; searchLR := true;
@@ -65,7 +66,6 @@ begin
         x1 := 0;
         x2 := EditorSample.Length - 1;
     end;
-    // end set bounds
 
     y1 := x1;
     y2 := x2;
@@ -76,14 +76,14 @@ begin
         n := x1;
         while (searchLL and searchLR and (n <= x2)) do 
         begin
-            if ((n - x1) mod 10000) = 0 then ProgressMsg('Trimming left side noise...', n - x1, x2 - x1); // Progress message
+            if (((n - x1) mod 10000) = 0) then ProgressMsg('Trimming beginning side noise...', n - x1, x2 - x1); // Progress message
 
             ll := EditorSample.GetSampleAt(n, 0);
             lr := EditorSample.GetSampleAt(n, 1);
 
             // Convert sample value to dB
-            llDb := ValToDB(ll, 1.);
-            lrDb := ValToDB(lr, 1.);
+            llDb := ValToDB(ll, 1);
+            lrDb := ValToDB(lr, 1);
 
             // Check if the threshold is exceeded
             if (llDb >= threshold) then  searchLL := false; // Find the left channel's left bound
@@ -100,14 +100,14 @@ begin
         n := x2;
         while (searchRL and searchRR and (n >= x1)) do 
         begin
-            if ((n - x1) mod 10000) = 0 then ProgressMsg('Trimming right side noise...', x2 - n, x2 - x1); // Progress message
+            if (((n - x1) mod 10000) = 0) then ProgressMsg('Trimming ending side noise...', x2 - n, x2 - x1); // Progress message
 
             rl := EditorSample.GetSampleAt(n, 0);
             rr := EditorSample.GetSampleAt(n, 1);
 
             // Convert sample value to dB
-            rlDb := ValToDB(rl, 1.);
-            rrDb := ValToDB(rr, 1.);
+            rlDb := ValToDB(rl, 1);
+            rrDb := ValToDB(rr, 1);
 
             // Check if the threshold is exceeded
             if (rlDb >= threshold) then  searchRL := false; // Find the left channel's left bound
@@ -127,7 +127,7 @@ begin
         // For each sample in the declicking range...
         for m := 0 to declickAmt do
         begin
-            a := Double(m) / Double(declickAmt); // Linear slope
+            a := double(m) / double(declickAmt); // Linear slope
 
             // Find indices
             if (side = 0) or (side = 2) then idx := m;               // Declick left (start) side
@@ -138,7 +138,7 @@ begin
                 begin
                 // Account for tension
                 if (tension < 0) then declickScale := Pow(a, (-tension + 1))
-                else                  declickScale := Pow(a, 1. / (tension + 1));
+                else                  declickScale := Pow(a, 1 / (tension + 1));
                 // Scale the sample down
                 s := declickScale * EditorSample.GetSampleAt(idx, c);
                 EditorSample.SetSampleAt(idx, c, s);

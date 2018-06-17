@@ -1,0 +1,69 @@
+script "Trim side noise (advanced)" language "pascal";
+{
+
+Trim Sides (advanced)
+
+Description:
+    Trims sample data below a noise threshold at the beginning and/or end
+    of a sample. Optionally performs declicking and normalization.
+
+}
+
+uses Trimming;
+
+// Adjustable Parameters ----------------------------------------------------
+const sideDefault : integer = 0;        // Side. 0: Left (start), 1: Right (end), 2: Both
+const threshDefault : double = -33;     // <-- EDIT DEFAULT NOISE THRESHOLD HERE
+const declickDefault : integer = 1;     // Declick? 0: No, 1: Yes
+const declickAmtDefault : double = 0;   // Length of declicking/fade (milliseconds)
+const tensionDefault : double = 0;      // Tension of declicking curve
+                                        // >0: Concave down, <0: Concave up, =0: Flat
+const normDefault : integer = 0;        // Normalize? 0: No, 1: Yes
+
+// Variables ----------------------------------------------------------------
+var Form : TScriptDialog;
+
+// Constants ----------------------------------------------------------------
+const sideLbl : string = 'Side';
+const sideChoices : string = 'Start,End,Both';
+
+const threshLbl : string = 'Threshold (dB)';
+const threshMin : double = -100;
+const threshMax : double = 0;
+
+const declickAmtLbl : string = 'Declick length';
+const declickAmtMin : double = 0;
+const declickAmtMax : double = 100000;
+
+const tensionLbl : string = 'Tension';
+const tensionMin : double = -100;
+const tensionMax : double = 100;
+
+const normLbl : string = 'Normalize?';
+const normChoices : string = 'No,Yes';
+
+// --------------------------------------------------------------------------
+begin
+
+if (EditorSample.NumChans <> 2) then
+begin
+    ShowMessage('This script can only be used on a stereo audio track.');
+    exit;
+end;
+
+Form := CreateScriptDialog('Trim side noise (advanced)',
+                           'Removes everything below the noise threshold from the beginning and/or end of the sample.');
+
+Form.AddInputCombo(sideLbl,sideChoices, sideDefault);
+Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
+Form.AddInputKnob(declickAmtLbl, declickAmtDefault, declickAmtMin, declickAmtMax);
+Form.AddInputKnob(tensionLbl, tensionDefault, tensionMin, tensionMax);
+Form.AddInputCombo(normLbl, normChoices, normDefault);
+
+if Form.Execute then TrimSide(Form.GetInputValue(sideLbl), Form.GetInputValue(threshLbl), 
+                              Form.GetInputValue(tensionLbl), (Form.GetInputValueAsInt(declickAmtLbl) > 0), 
+                              (Form.GetInputValueAsInt(normLbl) = 1), Form.GetInputValueAsInt(declickAmtLbl));
+
+Form.Free;
+
+end.
