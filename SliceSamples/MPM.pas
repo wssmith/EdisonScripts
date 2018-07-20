@@ -21,9 +21,6 @@ const defaultCutoff : double = 0.97; // Ratio to the highest NSDF peak, above wh
 function GetNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
 function PitchToNote(const frequency : double) : integer;
 function GetPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
-procedure NormalizedSquareDifference(const buffer: DoubleArray; var nsdf : DoubleArray);
-procedure ParabolicInterpolation(const nsdf : DoubleArray; const tau : integer; out turningPtX, turningPtY : double);
-procedure SelectPeaks(const nsdf : DoubleArray; var maxPositions : IntArray; out posCount : integer);
 // End functions and procedures ---------------------------------------------
 
 implementation
