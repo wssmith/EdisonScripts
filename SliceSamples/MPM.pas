@@ -12,7 +12,6 @@ unit MPM;
 
 interface
 
-// Functions and procedures -------------------------------------------------
 type IntArray = array of integer;
 type DoubleArray = array of double;
 
@@ -21,7 +20,6 @@ const defaultCutoff : double = 0.97; // Ratio to the highest NSDF peak, above wh
 function GetNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
 function PitchToNote(const frequency : double) : integer;
 function GetPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
-// End functions and procedures ---------------------------------------------
 
 implementation
 
