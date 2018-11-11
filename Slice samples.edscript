@@ -1,0 +1,264 @@
+script "Slice samples" language "pascal";
+{
+
+Slice Samples
+
+Description:
+    Inserts a slice marker at the beginning of each non-silent section of audio.
+
+}
+
+uses MPM;
+
+type NoteAssignType = (None = 0, Manual = 1, Automatic = 2);
+
+const silenceAnnotation : string = 'SILENT';
+const defaultMaxBufferMs : double = 200; // Length of audio used for automatic pitch detection
+
+// Convert a normalized sample value to its value on the decibel scale
+function ValueToDecibels(const val, ref : double) : double;
+begin
+    if (ref = 0) then ValueToDecibels := 0
+    else ValueToDecibels := 20 * Ln(Abs(val / ref)) / Ln(10);
+end;
+
+// Delete all regions with the current selection
+procedure DeleteSelectedRegions(const x1, x2 : integer);
+var r : integer;
+    Region : TRegion;
+begin
+    for r := (EditorSample.RegionCount - 1) downto 0 do
+    begin
+        Region := EditorSample.GetRegion(r);
+        
+        if (Region.SampleStart >= x1) and (Region.SampleStart <= x2) then
+        begin
+            if (Region.SampleEnd <= x2) or (Region.SampleEnd = MaxInt) then
+                EditorSample.DeleteRegion(r)
+            else if (Region.SampleEnd > x2) then
+                Region.SampleStart := x2 + 1;
+        end
+        else if (Region.SampleStart < x1) and (Region.SampleEnd <> MaxInt) then
+        begin
+            if (Region.SampleEnd > x2)  then
+                EditorSample.AddRegion('', x2 + 1);
+            if (Region.SampleEnd >= x1) then
+                Region.SampleEnd := MaxInt;
+        end;
+    end;
+end;
+
+// Main function for slicing the audio into regions
+procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const assignNotes, lowestNote, interval : integer;
+                       const maxBufferMs : double = defaultMaxBufferMs);
+var isNoteFound, isSampleSilent : boolean;
+    n, c, x1, x2, r, r1, r2, ridx : integer;
+    silenceCount, noteCount, maxBufferS, bufferLength : integer;
+    sDb, patienceS, regionPitch, clarity, maxClarity, maxClarityPitch : double;
+    Region : TRegion;
+    buffer : array of double;
+begin
+    if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1) then exit;
+
+    patienceS := EditorSample.MsToSamples(patience);
+    isNoteFound := false;
+    silenceCount := 0;
+    noteCount := 0;
+    ridx := 0;
+
+    if (maxBufferMs <= 0) then
+        maxBufferS := MaxInt
+    else
+        maxBufferS := Round(EditorSample.MsToSamples(maxBufferMs));
+
+    Editor.GetSelectionS(x1, x2);
+
+    // If nothing is selected, select everything
+    if (x1 = x2) then
+    begin
+        x1 := 0;
+        x2 := EditorSample.Length - 1;
+    end;
+
+    DeleteSelectedRegions(x1, x2);
+
+    // For each sample...
+    for n := x1 to x2 do
+    begin
+        if (((n - x1) mod 10000) = 0) then ProgressMsg('Detecting regions...', n - x1, x2 - x1);
+
+        // Determine whether the sample is silent on every channel
+        isSampleSilent := true;
+        for c := 0 to (EditorSample.NumChans - 1) do
+        begin
+            sDb := ValueToDecibels(EditorSample.GetSampleAt(n, c), 1.);
+            if (sDb >= threshold) then
+            begin
+                isSampleSilent := false;
+                break;
+            end;
+        end;
+        
+        // If the sample is silent and patience is exceeded, end the current region
+        if isSampleSilent then
+        begin
+            Inc(silenceCount, 1);
+
+            if isNoteFound and (silenceCount > patienceS) then
+            begin
+                isNoteFound := false;
+                r := EditorSample.AddRegion('', n - 1);
+                Region := EditorSample.GetRegion(r);
+                Region.Info := silenceAnnotation;
+            end;
+        end
+        else
+        begin
+            silenceCount := 0;
+            
+            if not isNoteFound then
+            begin
+                isNoteFound := true;
+                Inc(noteCount, 1);
+
+                if (n > x1) then
+                begin
+                    r := EditorSample.AddRegion('', n - 1);
+                    Region := EditorSample.GetRegion(r);
+                    
+                    // If the audio clip begins with silence, an initial silent region must be added
+                    if (noteCount = 1) and (Region.SampleStart > 0) then
+                        EditorSample.GetRegion(EditorSample.AddRegion('', 0)).Info := silenceAnnotation;
+                end
+                else
+                begin
+                    r := EditorSample.AddRegion('', x1);
+                    Region := EditorSample.GetRegion(r);
+                end;
+                
+                // Assign MIDI note to region
+                if (assignNotes = Ord(Manual)) then
+                    Region.KeyNum := lowestNote + interval * (noteCount - 1)
+            end;
+        end;
+    end;
+
+    if trimSilence or (assignNotes = Ord(Automatic)) then
+    begin
+        // For each region...
+        for r := (EditorSample.RegionCount - 1) downto 0 do
+        begin
+            Region := EditorSample.GetRegion(r);
+
+            if ((Region.SampleStart < x1) or (Region.SampleStart > x2)) then continue;
+
+            r1 := Region.SampleStart;
+            if (r = (EditorSample.RegionCount - 1)) then
+                r2 := (EditorSample.Length - 1)
+            else
+                r2 := EditorSample.GetRegion(r + 1).SampleStart - 1;
+
+            if (Region.Info = silenceAnnotation) then
+            begin
+                if not trimSilence then continue;
+
+                // Delete silent regions
+                EditorSample.DeleteRegion(r);
+                EditorSample.DeleteFromTo(r1, r2);
+            end
+            else if (assignNotes = Ord(Automatic)) then
+            begin
+                // Assign MIDI note to region via automatic pitch detection
+                ProgressMsg('Detecting region pitches...', ridx, noteCount);
+
+                // Detect the pitch and clarity of each channel and use the pitch of the highest clarity channel
+                bufferLength := r2 - r1 + 1;
+                if (bufferLength > maxBufferS) then
+                    bufferLength := maxBufferS;
+
+                SetLength(buffer, bufferLength);
+
+                maxClarity := 0;
+                for c := 0 to (EditorSample.NumChans - 1) do
+                begin
+                    for n := r1 to (r1 + bufferLength - 1) do
+                        buffer[n - r1] := EditorSample.GetSampleAt(n, c);
+
+                    regionPitch := DetectPitch(buffer, EditorSample.Samplerate, clarity);
+                    if (regionPitch < 0) then continue;
+                    
+                    if (clarity > maxClarity) then
+                    begin
+                        maxClarity := clarity;
+                        maxClarityPitch := regionPitch;
+                    end;
+                end;
+
+                // Only assign a note value if a pitch can be discerned
+                if (maxClarity > 0) then
+                    Region.KeyNum := PitchToNote(maxClarityPitch);
+                
+                Inc(ridx, 1);
+            end;
+        end;
+    end;
+end;
+
+var Form : TScriptDialog;
+
+// Adjustable Parameters ----------------------------------------------------
+const threshDefault : double = -75;     // Threshold (in dB) below which the audio is considered silent
+const patienceDefault : double = 100;   // Maximum consecutive milliseconds of silence allowed in one sample
+const trimDefault : integer = 1;        // Should silent regions be deleted? No: 0, Yes: 1
+const noteAssignDefault : integer = 0;  // Should notes be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
+const lowestNoteDefault : integer = 48; // Lowest note sampled (if assigning notes manually)
+const intervalDefault : integer = 1;    // Interval between each note sampled (if assigning notes manually)
+
+// Constants ----------------------------------------------------------------
+const threshLbl : string = 'Threshold (dB)';
+const threshMin : double = -100;
+const threshMax : double = 0;
+
+const patienceLbl : string = 'Patience (ms)';
+const patienceMin : double = 1;
+const patienceMax : double = 1000;
+
+const trimLbl : string = 'Trim silence?';
+const trimChoices : string = 'No,Yes';
+
+const noteAssignLbl : string = 'Note assignment';
+const noteAssignChoices : string = 'Off,Manual,Automatic';
+
+const lowestNoteLbl : string = 'Lowest note';
+const lowestNoteMin : integer = 0;
+const lowestNoteMax : integer = 127;
+
+const intervalLbl : string = 'Interval';
+const intervalMin : integer = 1;
+const intervalMax : integer = 12;
+
+begin
+
+Form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the beginning of each non-silent section of audio.' + CRLF + CRLF +
+                                            'Parameters:' + CRLF +
+                                            #$9 + #$2022 + ' Threshold - Amplitudes below this cutoff are considered silent' + CRLF +
+                                            #$9 + #$2022 + ' Patience - Length of continuous silence to allow before ending a region' + CRLF +
+                                            #$9 + #$2022 + ' Trim silence? - Whether to delete silent regions of audio' + CRLF +
+                                            #$9 + #$2022 + ' Note assignment - Defines how regions are assigned note values' + CRLF +
+                                            #$9 + #$2022 + ' Lowest note - Lowest note sampled (manual assignment only)' + CRLF +
+                                            #$9 + #$2022 + ' Interval - Gap between sampled notes (manual assignment only)');
+
+Form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
+Form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
+Form.AddInputCombo(trimLbl, trimChoices, trimDefault);
+Form.AddInputCombo(noteAssignLbl, noteAssignChoices, noteAssignDefault);
+Form.AddInputKnob(lowestNoteLbl, lowestNoteDefault, lowestNoteMin, lowestNoteMax);
+Form.AddInputKnob(intervalLbl, intervalDefault, intervalMin, intervalMax);
+
+if Form.Execute then
+    SliceSamples(Form.GetInputValue(threshLbl), Form.GetInputValue(patienceLbl), (Form.GetInputValueAsInt(trimLbl) = 1),
+    Form.GetInputValueAsInt(noteAssignLbl), Form.GetInputValueAsInt(lowestNoteLbl), Form.GetInputValueAsInt(intervalLbl));
+
+Form.Free;
+
+end.
