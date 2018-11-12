@@ -207,7 +207,7 @@ end;
 var Form : TScriptDialog;
 
 // Adjustable Parameters ----------------------------------------------------
-const threshDefault : double = -75;     // Threshold (in dB) below which the audio is considered silent
+const threshDefault : double = -60;     // Threshold (in dB) below which the audio is considered silent
 const patienceDefault : double = 100;   // Maximum consecutive milliseconds of silence allowed in one sample
 const trimDefault : integer = 1;        // Should silent regions be deleted? No: 0, Yes: 1
 const noteAssignDefault : integer = 0;  // Should notes be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
