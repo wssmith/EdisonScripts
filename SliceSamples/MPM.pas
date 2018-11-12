@@ -17,9 +17,9 @@ type DoubleArray = array of double;
 
 const defaultCutoff : double = 0.97; // Ratio to the highest NSDF peak, above which estimates can be selected
 
-function GetNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
+function DetectNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
 function PitchToNote(const frequency : double) : integer;
-function GetPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
+function DetectPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
 
 implementation
 
@@ -28,9 +28,9 @@ const lowerPitchCutoff : double = 80.0; // Only consider pitches above this freq
 const tuning : double = 440; // Tuning of A4 (in Hz)
 
 // Estimates the pitch of an audio buffer and returns the closest MIDI note
-function GetNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
+function DetectNote(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : integer;
 begin
-    GetNote := PitchToNote(GetPitch(buffer, sampleRate, clarity, cutoff));
+    DetectNote := PitchToNote(DetectPitch(buffer, sampleRate, clarity, cutoff));
 end;
 
 // Converts frequency (in Hz) to the closest MIDI note
@@ -40,7 +40,7 @@ begin
 end;
 
 // Estimates the pitch of an audio buffer (in Hz)
-function GetPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
+function DetectPitch(const buffer : DoubleArray; const sampleRate : double; out clarity : double; const cutoff : double = defaultCutoff) : double;
 var i, tau, bufferSize, periodIndex, posCount, estimateCount : integer;
     maxAmp, turningPtX, turningPtY, actualCutoff, period, pitchEstimate : double;
     maxPositions : IntArray;
@@ -82,7 +82,7 @@ begin
     end;
     
     clarity := 0;
-    GetPitch := -1;
+    DetectPitch := -1;
 
     if (estimateCount > 0) then
     begin
@@ -104,7 +104,7 @@ begin
         if (pitchEstimate > lowerPitchCutoff) then
         begin
             clarity := ampEstimates[periodIndex];
-            GetPitch := pitchEstimate;
+            DetectPitch := pitchEstimate;
         end
     end;
 end;
