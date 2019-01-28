@@ -53,7 +53,7 @@ begin
     // For each sample...
     for n := x1 to x2 do
     begin
-        if (((n - x1) mod 10000) = 0) then ProgressMsg('Detecting regions...', n - x1, x2 - x1);
+        //if (((n - x1) mod 10000) = 0) then ProgressMsg('Detecting regions...', n - x1, x2 - x1);
 
         // Determine whether the sample is silent on every channel
         isSampleSilent := true;
