@@ -158,7 +158,7 @@ begin
     while (pos < ((nsdfSize - 1) / 3)) and (nsdf[pos] > 0) do
         Inc(pos, 1);
 
-    while (pos < nsdfSize - 1) and (nsdf[pos] <= 0.0) do
+    while (pos < nsdfSize - 1) and (nsdf[pos] <= 0) do
         Inc(pos, 1);
 
     if (pos = 0) then
@@ -184,7 +184,7 @@ begin
                 Inc(posCount, 1);
             end;
             
-            while (pos < (nsdfSize - 1)) and (nsdf[pos] <= 0.0) do
+            while (pos < (nsdfSize - 1)) and (nsdf[pos] <= 0) do
                 Inc(pos, 1);
         end;
     end;
