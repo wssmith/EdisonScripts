@@ -279,13 +279,13 @@ const trimChoices : string = 'No,Yes';
 const noteAssignLbl : string = 'Note assignment';
 const noteAssignChoices : string = 'Off,Manual,Automatic';
 
-const lowestNoteLbl : string = 'Lowest note';
-const lowestNoteMin : integer = 0;
-const lowestNoteMax : integer = 127;
+const lowestNoteLbl : string = 'First note';
+const lowestNoteMin : single = 0;
+const lowestNoteMax : single = 127;
 
 const intervalLbl : string = 'Interval';
-const intervalMin : integer = 1;
-const intervalMax : integer = 12;
+const intervalMin : single = -12;
+const intervalMax : single = 12;
 
 begin
 
@@ -295,7 +295,7 @@ form := CreateScriptDialog('Slice samples', 'Inserts a slice marker at the begin
                                             #$9 + #$2022 + ' Patience - Length of continuous silence to allow before ending a region' + CRLF +
                                             #$9 + #$2022 + ' Trim silence? - Whether to delete silent regions of audio' + CRLF +
                                             #$9 + #$2022 + ' Note assignment - Defines how regions are assigned note values' + CRLF +
-                                            #$9 + #$2022 + ' Lowest note - Lowest note sampled (manual assignment only)' + CRLF +
+                                            #$9 + #$2022 + ' First note - First note sampled (manual assignment only)' + CRLF +
                                             #$9 + #$2022 + ' Interval - Gap between sampled notes (manual assignment only)');
 
 form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
