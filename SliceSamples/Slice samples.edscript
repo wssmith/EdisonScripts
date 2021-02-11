@@ -279,9 +279,9 @@ const trimChoices : string = 'No,Yes';
 const noteAssignLbl : string = 'Note assignment';
 const noteAssignChoices : string = 'Off,Manual,Automatic';
 
-const lowestNoteLbl : string = 'First note';
-const lowestNoteMin : single = 0;
-const lowestNoteMax : single = 127;
+const firstNoteLbl : string = 'First note';
+const firstNoteMin : single = 0;
+const firstNoteMax : single = 127;
 
 const intervalLbl : string = 'Interval';
 const intervalMin : single = -12;
@@ -302,12 +302,12 @@ form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
 form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
 form.AddInputCombo(trimLbl, trimChoices, trimDefault);
 form.AddInputCombo(noteAssignLbl, noteAssignChoices, noteAssignDefault);
-form.AddInputKnob(lowestNoteLbl, lowestNoteDefault, lowestNoteMin, lowestNoteMax);
+form.AddInputKnob(firstNoteLbl, lowestNoteDefault, firstNoteMin, firstNoteMax);
 form.AddInputKnob(intervalLbl, intervalDefault, intervalMin, intervalMax);
 
 if form.Execute then
     SliceSamples(form.GetInputValue(threshLbl), form.GetInputValue(patienceLbl), (form.GetInputValueAsInt(trimLbl) = 1),
-    form.GetInputValueAsInt(noteAssignLbl), form.GetInputValueAsInt(lowestNoteLbl), form.GetInputValueAsInt(intervalLbl));
+    form.GetInputValueAsInt(noteAssignLbl), form.GetInputValueAsInt(firstNoteLbl), form.GetInputValueAsInt(intervalLbl));
 
 form.Free;
 
