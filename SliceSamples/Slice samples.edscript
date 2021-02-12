@@ -15,11 +15,11 @@ type NoteAssignType = (None = 0, Manual = 1, Automatic = 2);
 const silenceAnnotation : string = 'SILENT';
 const defaultMaxBufferMs : double = 200; // Length of audio used for automatic pitch detection
 
-// Convert a normalized sample value to its value on the decibel scale
-function ValueToDecibels(const val, ref : double) : double;
+// Convert a normalized sample amplitude to the decibel scale
+function AmplitudeToDecibels(const amp, ref : double = 1) : double;
 begin
-    if (ref = 0) then ValueToDecibels := 0
-    else ValueToDecibels := 20 * Ln(Abs(val / ref)) / Ln(10);
+    if (ref = 0) then AmplitudeToDecibels := 0
+    else AmplitudeToDecibels := 20 * Ln(Abs(amp / ref)) / Ln(10);
 end;
 
 // Get the current selection and if nothing is selected, select everything
@@ -59,7 +59,7 @@ begin
         isSampleSilent := true;
         for c := 0 to (EditorSample.NumChans - 1) do
         begin
-            sampDb := ValueToDecibels(EditorSample.GetSampleAt(n, c), 1);
+            sampDb := AmplitudeToDecibels(EditorSample.GetSampleAt(n, c));
             if (sampDb >= threshold) then
             begin
                 isSampleSilent := false;
@@ -280,8 +280,8 @@ const noteAssignLbl : string = 'Note assignment';
 const noteAssignChoices : string = 'Off,Manual,Automatic';
 
 const firstNoteLbl : string = 'First note';
-const firstNoteMin : single = 0;
-const firstNoteMax : single = 127;
+const firstNoteMin : integer = 0;
+const firstNoteMax : integer = 127;
 
 const intervalLbl : string = 'Interval';
 const intervalMin : single = -12;
