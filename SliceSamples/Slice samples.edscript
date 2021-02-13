@@ -165,7 +165,7 @@ begin
 end;
 
 // Add pitch tags to non-silent regions, either through a formula or pitch detection
-procedure AssignPitchTags(const x1, x2, assignNotes, noteCount, lowestNote, interval : integer; const maxBufferMs : double);
+procedure AssignPitchTags(const x1, x2, assignNotes, noteCount, firstNote, interval : integer; const maxBufferMs : double);
 var n, c, r, r1, r2, ridx: integer;
     regionPitch, clarity, maxClarity, maxClarityPitch : double;
     bufferLength, maxBufferSamp : integer;
@@ -227,7 +227,7 @@ begin
         else if (assignNotes = Ord(Manual)) then
         begin
             // Assign MIDI note according to formula
-            region.KeyNum := lowestNote + interval * (noteCount - ridx - 1);
+            region.KeyNum := firstNote + interval * (noteCount - ridx - 1);
         end;
 
         Inc(ridx, 1);
@@ -235,7 +235,7 @@ begin
 end;
 
 // Main function for slicing the audio into regions
-procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const assignNotes, lowestNote, interval : integer;
+procedure SliceSamples(const threshold, patience : double; const trimSilence : boolean; const assignNotes, firstNote, interval : integer;
                        const maxBufferMs : double = defaultMaxBufferMs);
 var x1, x2, noteCount : integer;
 begin
@@ -247,7 +247,7 @@ begin
 
     // MIDI note assignment
     if ((assignNotes = Ord(Automatic)) or (assignNotes = Ord(Manual))) then
-        AssignPitchTags(x1, x2, assignNotes, noteCount, lowestNote, interval, maxBufferMs);
+        AssignPitchTags(x1, x2, assignNotes, noteCount, firstNote, interval, maxBufferMs);
 
     // Remove silent regions?
     if trimSilence then
@@ -261,7 +261,7 @@ const threshDefault : double = -60;     // Threshold (in dB) below which the aud
 const patienceDefault : double = 100;   // Maximum consecutive milliseconds of silence allowed in one sample
 const trimDefault : integer = 1;        // Should silent regions be deleted? No: 0, Yes: 1
 const noteAssignDefault : integer = 0;  // Should notes be assigned to sample regions? Off: 0, Manual: 1, Automatic: 2
-const lowestNoteDefault : integer = 48; // Lowest note sampled (if assigning notes manually)
+const firstNoteDefault : integer = 48;  // First note sampled (if assigning notes manually)
 const intervalDefault : integer = 1;    // Interval between each note sampled (if assigning notes manually)
 
 // UI Constants ----------------------------------------------------------------
@@ -302,7 +302,7 @@ form.AddInputKnob(threshLbl, threshDefault, threshMin, threshMax);
 form.AddInputKnob(patienceLbl, patienceDefault, patienceMin, patienceMax);
 form.AddInputCombo(trimLbl, trimChoices, trimDefault);
 form.AddInputCombo(noteAssignLbl, noteAssignChoices, noteAssignDefault);
-form.AddInputKnob(firstNoteLbl, lowestNoteDefault, firstNoteMin, firstNoteMax);
+form.AddInputKnob(firstNoteLbl, firstNoteDefault, firstNoteMin, firstNoteMax);
 form.AddInputKnob(intervalLbl, intervalDefault, intervalMin, intervalMax);
 
 if form.Execute then
