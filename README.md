@@ -1,4 +1,4 @@
-# EdisonScripts
+# SliceSamples
 
 ## Instructions
 1. Copy these files to '...\Image-Line\\\[FL Studio version]\Plugins\Fruity\Effects\Edison\Data\Scripts'.
