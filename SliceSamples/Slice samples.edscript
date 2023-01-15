@@ -16,7 +16,7 @@ const silenceAnnotation : string = 'SILENT';
 const defaultMaxBufferMs : double = 200; // Length of audio used for automatic pitch detection
 
 // Convert a normalized sample amplitude to the decibel scale
-function AmplitudeToDecibels(const amplitude) : double;
+function AmplitudeToDecibels(const amplitude : double) : double;
 begin
     if (amplitude = 0) then AmplitudeToDecibels := -96.0
     else AmplitudeToDecibels := 20 * Ln(amplitude) / Ln(10);
@@ -67,9 +67,9 @@ begin
             end;
         end;
         
-        // If the sample is silent and patience is exceeded, end the current region
         if isSampleSilent then
         begin
+            // The sample is silent and patience is exceeded, so end the current region
             if isNoteFound and (silenceCount >= patienceSamp) then
             begin
                 r := EditorSample.AddRegion('', n);
@@ -91,12 +91,11 @@ begin
                 
                 if (n > x1) then
                 begin
-                    region := EditorSample.GetRegion(r);
-
                     // If the selection begins with silence, an initial silent region must be added
+                    region := EditorSample.GetRegion(r);
                     if (noteCount = 0) and (region.SampleStart > x1) then
                         EditorSample.GetRegion(EditorSample.AddRegion('', x1)).Info := silenceAnnotation;
-                end
+                end;
 
                 isNoteFound := true;
                 Inc(noteCount, 1);
@@ -114,23 +113,13 @@ begin
     begin
         region := EditorSample.GetRegion(r);
 
-        // Delete region starting immediately after selection, since one with be added in the region creation process
-        if (x2 < (EditorSample.Length - 1)) and (region.SampleStart = (x2 + 1)) then
+        if (region.SampleStart >= x1) and (region.SampleStart <= x2) then
+        begin
             EditorSample.DeleteRegion(r);
-        
-        if (region.SampleStart >= x1) and (region.SampleStart <= x2) then // Starts inside the selection
-        begin
-            if (region.SampleEnd <= x2) or (region.SampleEnd = MaxInt) then // Region is a subset of the selection
-                EditorSample.DeleteRegion(r)
-            else if (region.SampleEnd > x2) then // Region overlaps with the selection's end
-                region.SampleStart := x2 + 1;
         end
-        else if (region.SampleStart < x1) and (region.SampleEnd <> MaxInt) then // Starts before the selection
+        else if (x2 < (EditorSample.Length - 1)) and (region.SampleStart = (x2 + 1)) then
         begin
-            if (region.SampleEnd > x2)  then // Selection is a subset of the region
-                EditorSample.AddRegion('', x2 + 1);
-            if (region.SampleEnd >= x1) then // Region overlaps with start of selection
-                region.SampleEnd := MaxInt;
+            EditorSample.DeleteRegion(r);
         end;
     end;
 end;
@@ -183,7 +172,7 @@ begin
         if ((region.SampleStart > x2) or (region.Info = silenceAnnotation)) then continue;
         if (region.SampleStart < x1) then break;
         
-        ProgressMsg('Detecting region pitches...', ridx, noteCount);
+        ProgressMsg('Detecting pitch...', ridx, noteCount);
 
         r1 := region.SampleStart;
         if (r = (EditorSample.RegionCount - 1)) then
