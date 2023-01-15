@@ -1,0 +1,140 @@
+"""
+SliceSamples: Inserts a slice marker at the beginning of each non-silent section of audio
+"""
+
+from enveditor import *
+from math import log10
+
+SILENT_TAG = "SILENT"
+
+# Convert a normalized sample amplitude to the decibel scale
+def AmplitudeToDecibels(amplitude):
+    return 20 * log10(amplitude) if amplitude > 0 else -96
+
+# Get the current selection and if nothing is selected, select everything
+def GetSelection():
+    return Editor.SelectionStartS, Editor.SelectionEndS
+
+# Delete all regions between x1 and x2
+def DeleteRegionMarkers(x1, x2): 
+    for r in reversed(range(EditorSample.RegionCount)):
+        region = EditorSample.GetRegion(r)
+
+        immediately_follows = (x2 < (EditorSample.Length - 1)) and (region.SampleStart == (x2 + 1))
+        starts_in_selection = (x1 <= region.SampleStart) and (x2 >= region.SampleStart)
+
+        if immediately_follows or starts_in_selection:
+            EditorSample.DeleteRegion(r)
+
+# Insert region markers at the beginning of silent and non-silent sections of the selected audio
+def CreateRegions(x1, x2, threshold, patience):
+    patience_samples = round(EditorSample.MSToSamples(patience))
+    is_note_found = False
+    silence_count = 0
+    note_count = 0
+    silent_regions = []
+
+    # If the entire track isn"t selected, insert a marker at the selection"s end to prevent undesired deletion
+    if x2 < (EditorSample.Length - 1):
+        EditorSample.AddRegion("", x2 + 1)
+
+    # For each sample...
+    for n in range(x1, x2 + 1):
+        if ((n - x1) % 10000) == 0:
+            Utils.ProgressMsg("Processing...", n - x1, x2 - x1)
+
+        # Determine whether the sample is silent on every channel
+        is_sample_silent = True
+        for c in range(EditorSample.NumChans):
+            s = EditorSample.GetSampleAt(n, c)
+            sample_db = AmplitudeToDecibels(EditorSample.GetSampleAt(n, c))
+            if (sample_db >= threshold):
+                is_sample_silent = False
+                break
+        
+        if is_sample_silent:
+            # The sample is silent and patience is exceeded, so end the current region
+            if is_note_found and (silence_count >= patience_samples):
+                r = EditorSample.AddRegion(SILENT_TAG, n)
+                silent_regions.append(r)
+                is_note_found = False
+
+            silence_count += 1
+        else:
+            silence_count = 0
+            if not is_note_found:
+                # A non-silent sample has been found, so end the silent region
+                r = EditorSample.AddRegion("", n)
+
+                if n > x1:
+                    # If the selection begins with silence, an initial silent region must be added
+                    region = EditorSample.GetRegion(r)
+                    if (note_count == 0) and (region.SampleStart > x1):
+                        r = EditorSample.AddRegion(SILENT_TAG, x1)
+                        silent_regions.append(r)
+
+                is_note_found = True
+                note_count += 1
+
+    return silent_regions
+
+def DeleteRegions(regions):
+    regions.sort()
+    for r in reversed(regions):
+        region = EditorSample.GetRegion(r)
+        
+        r1 = region.SampleStart
+        if r == (EditorSample.RegionCount - 1):
+            r2 = (EditorSample.Length - 1)
+        else:
+            r2 = EditorSample.GetRegion(r + 1).SampleStart - 1
+
+        EditorSample.DeleteRegion(r)
+        EditorSample.DeleteFromTo(r1, r2)
+
+def SliceSamples(threshold, patience, trim_silence):
+    if (EditorSample.Length <= 0) or (EditorSample.NumChans < 1):
+        return
+    
+    x1, x2 = GetSelection()
+
+    # Delete preexisting regions inside selection
+    DeleteRegionMarkers(x1, x2)
+
+    # Add regions at non-silent boundaries
+    silent_regions = CreateRegions(x1, x2, threshold, patience)
+
+    # Remove silent regions?
+    if trim_silence:
+        DeleteRegions(silent_regions)
+
+
+# Default Arguments -----------------------------------------------------------
+THRESH_DEFAULT = -60    # Threshold (in dB) below which the audio is considered silent
+PATIENCE_DEFAULT = 100  # Maximum consecutive milliseconds of silence allowed in one sample
+TRIM_DEFAULT = 1        # Should silent regions be deleted? No: 0, Yes: 1
+
+# UI Constants ----------------------------------------------------------------
+THRESH_LBL = "Threshold (dB)"
+THRESH_MIN = -96
+THRESH_MAX = 0
+
+PATIENCE_LBL = "Patience (ms)"
+PATIENCE_MIN = 1
+PATIENCE_MAX = 1000
+
+TRIM_LBL = "Trim silence?"
+TRIM_CHOICES = "No,Yes"
+
+form = ScriptDialog("Slice samples", "Inserts a slice marker at the beginning of each non-silent section of audio.\r\n" +
+                                     "Parameters:\r\n" +
+                                     "\t\u2022 Threshold - Amplitudes below this cutoff are considered silent\r\n" +
+                                     "\t\u2022 Patience - Length of continuous silence to allow before ending a region\r\n" +
+                                     "\t\u2022 Trim silence? - Whether to delete silent regions of audio")
+
+form.AddInputKnob(THRESH_LBL, THRESH_DEFAULT, THRESH_MIN, THRESH_MAX)
+form.AddInputKnob(PATIENCE_LBL, PATIENCE_DEFAULT, PATIENCE_MIN, PATIENCE_MAX)
+form.AddInputCombo(TRIM_LBL, TRIM_CHOICES, TRIM_DEFAULT)
+
+if form.Execute():
+    SliceSamples(form.GetInputValue(THRESH_LBL), form.GetInputValue(PATIENCE_LBL), form.GetInputValue(TRIM_LBL) == 1)
