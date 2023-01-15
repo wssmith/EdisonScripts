@@ -12,7 +12,7 @@ This is a script for FL Studio's Edison audio editor. It slices up an audio trac
 2. Access the functions inside Edison using the 'Run script' button or 'Tools > Scripting > Run Script'.
 3. You can save the regions as individual WAVs with 'File > Export Regions > For sampler use'.
 
- * If you're using the Pascal script's pitch detection feature, this will ensure the samples can be mapped correctly by DirectWave.
+ * If you're using the Pascal script's pitch detection feature, 'For sampler use' ensures the samples can be mapped by properly DirectWave.
 
 ## Compatibility
 Support for scripting in Pascal has been dropped in FL 21. A Python version has been written for compatibility with new versions of FL.
