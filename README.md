@@ -17,8 +17,8 @@ This script was originally written in Pascal and supported automatic pitch detec
 
 Before:
 
-![SliceSamplesBefore](https://user-images.githubusercontent.com/9618980/212554637-24412e75-6447-4135-9c79-2c6959abb71b.PNG)
+![SliceSamplesBefore](https://user-images.githubusercontent.com/9618980/212562785-0d56689f-f9db-4420-917f-b295feb97f6a.PNG)
 
 After:
 
-![SliceSamplesAfter](https://user-images.githubusercontent.com/9618980/212554642-575bf0d8-29b2-4e4b-bb54-c7b68d9392e5.PNG)
+![SliceSamplesAfter](https://user-images.githubusercontent.com/9618980/212562789-ff7d3104-e851-4fcd-9eb5-7756a23fe23b.PNG)
