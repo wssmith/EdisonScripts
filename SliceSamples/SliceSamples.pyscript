@@ -34,7 +34,7 @@ def CreateRegions(x1, x2, threshold, patience):
     note_count = 0
     silent_regions = []
 
-    # If the entire track isn"t selected, insert a marker at the selection"s end to prevent undesired deletion
+    # If the entire track isn't selected, insert a marker at the selection's end to prevent undesired deletion
     if x2 < (EditorSample.Length - 1):
         EditorSample.AddRegion("", x2 + 1)
 
