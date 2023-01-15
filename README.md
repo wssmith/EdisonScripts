@@ -9,9 +9,11 @@ This is a script for FL Studio's Edison audio editor. It slices up an audio trac
 3. You can save the regions as individual WAVs with 'File > Export Regions > For sampler use'.
 
 ## Compatibility
+Requires FL Studio 21.
+
 FL 21 dropped support for Pascal scripting, with Python scripting added as a replacement.
 
-This script was originally written in Pascal and supported automatic pitch detection for use in DirectWave. There's currently no way to accomplish this with a Python script (as of 1/15/2023). Pitch detection will be added back if the Python scripting API ever allows it.
+SliceSamples was originally written in Pascal and supported automatic pitch detection for use in DirectWave. As of January 2023, it isn't possible to tag regions with a Python script, so pitch detection has been removed.
 
 ## Example
 
