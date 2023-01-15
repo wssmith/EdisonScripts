@@ -9,7 +9,7 @@ This is a script for FL Studio's Edison audio editor. It slices up an audio trac
 3. You can save the regions as individual WAVs with 'File > Export Regions > For sampler use'.
 
 ## Compatibility
-Requires FL Studio 21.
+**Requires FL Studio 21.**
 
 FL 21 dropped support for Pascal scripting, adding Python scripting as a replacement.
 
