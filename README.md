@@ -1,5 +1,5 @@
 # SliceSamples
-Slices up an audio track into non-silent regions. I find this useful for splitting tracks from CDDA format sample CDs into individual WAVs.
+Slices up an audio track into non-silent regions. I find this useful for splitting tracks from CDDA format sample CDs into individual samples.
 
 ## Instructions
 1. Copy these files to '...\Image-Line\\\[FL Studio version]\Plugins\Fruity\Effects\Edison\Data\Scripts'.
