@@ -11,7 +11,7 @@ This is a script for FL Studio's Edison audio editor. It slices up an audio trac
 ## Compatibility
 In FL 20 and before, scripts could be written in Pascal or JavaScript. However, in FL 21 support for these languages was dropped and Python support was added.
 
-This script was originally written in Pascal and supported automatic pitch detection for use in DirectWave, but as of 1/15/2023 there's no way to accomplish this with a Python script. Pitch detection will be added back if the Python scripting API ever allows it.
+This script was originally written in Pascal and supported automatic pitch detection for use in DirectWave. There's currently no way to accomplish this with a Python script (as of 1/15/2023). Pitch detection will be added back if the Python scripting API ever allows it.
 
 ## Example
 
