@@ -1,5 +1,7 @@
 # SliceSamples
-This is a script for FL Studio's Edison audio editor. It slices up an audio track into non-silent regions and removes the silent part. I've found this useful for splitting tracks from CDDA format sample CDs into individual WAVs.
+This is a script for FL Studio's Edison audio editor. It slices up an audio track into non-silent regions and removes the silent part.
+
+I've found this useful for splitting tracks from CDDA format sample CDs into individual WAVs.
 
 ![SliceSamplesUI](https://user-images.githubusercontent.com/9618980/212553946-9d82d82c-7d14-478c-bfc0-e5af85121a37.PNG)
 
