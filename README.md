@@ -11,7 +11,7 @@ This is a script for FL Studio's Edison audio editor. It slices up an audio trac
 ## Compatibility
 Requires FL Studio 21.
 
-FL 21 dropped support for Pascal scripting, with Python scripting added as a replacement.
+FL 21 dropped support for Pascal scripting, adding Python scripting as a replacement.
 
 SliceSamples was originally written in Pascal and supported automatic pitch detection for use in DirectWave. As of January 2023, it isn't possible to tag regions with a Python script, so pitch detection has been removed.
 
