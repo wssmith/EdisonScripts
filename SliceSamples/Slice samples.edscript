@@ -16,10 +16,10 @@ const silenceAnnotation : string = 'SILENT';
 const defaultMaxBufferMs : double = 200; // Length of audio used for automatic pitch detection
 
 // Convert a normalized sample amplitude to the decibel scale
-function AmplitudeToDecibels(const amp, ref : double = 1) : double;
+function AmplitudeToDecibels(const amplitude) : double;
 begin
-    if (ref = 0) then AmplitudeToDecibels := 0
-    else AmplitudeToDecibels := 20 * Ln(Abs(amp / ref)) / Ln(10);
+    if (amplitude = 0) then AmplitudeToDecibels := -96.0
+    else AmplitudeToDecibels := 20 * Ln(amplitude) / Ln(10);
 end;
 
 // Get the current selection and if nothing is selected, select everything
@@ -53,7 +53,7 @@ begin
     // For each sample...
     for n := x1 to x2 do
     begin
-        //if (((n - x1) mod 10000) = 0) then ProgressMsg('Detecting regions...', n - x1, x2 - x1);
+        //if (((n - x1) mod 10000) = 0) then ProgressMsg('Processing...', n - x1, x2 - x1);
 
         // Determine whether the sample is silent on every channel
         isSampleSilent := true;
@@ -72,7 +72,7 @@ begin
         begin
             if isNoteFound and (silenceCount >= patienceSamp) then
             begin
-                r := EditorSample.AddRegion('', n - 1);
+                r := EditorSample.AddRegion('', n);
                 region := EditorSample.GetRegion(r);
                 region.Info := silenceAnnotation;
                 isNoteFound := false;
@@ -82,28 +82,25 @@ begin
         end
         else
         begin
+            silenceCount := 0;
+
             if not isNoteFound then
             begin
+                // A non-silent sample has been found, so end the silent region
+                r := EditorSample.AddRegion('', n);
+                
                 if (n > x1) then
                 begin
-                    r := EditorSample.AddRegion('', n - 1);
                     region := EditorSample.GetRegion(r);
 
                     // If the selection begins with silence, an initial silent region must be added
                     if (noteCount = 0) and (region.SampleStart > x1) then
                         EditorSample.GetRegion(EditorSample.AddRegion('', x1)).Info := silenceAnnotation;
                 end
-                else
-                begin
-                    r := EditorSample.AddRegion('', x1);
-                    Region := EditorSample.GetRegion(r);
-                end;
 
                 isNoteFound := true;
                 Inc(noteCount, 1);
             end;
-
-            silenceCount := 0;
         end;
     end;
 end;
